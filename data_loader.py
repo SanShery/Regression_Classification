@@ -1,54 +1,68 @@
-from linear_regression import mapping_data
+from sklearn.datasets import make_classification, make_blobs, make_moons, load_iris
+from sklearn.model_selection import train_test_split
+# from linear_regression import mapping_data
 
 import json
 import numpy as np
 import pandas as pd
 
 
-def data_processing_linear_regression(filename, non_invertible, mapping, mapping_power):
-  
+# Binary classification data
+def toy_data_binary():
+  data = make_classification(n_samples=500, 
+                              n_features=2,
+                              n_informative=1, 
+                              n_redundant=0, 
+                              n_repeated=0, 
+                              n_classes=2, 
+                              n_clusters_per_class=1, 
+                              class_sep=1., 
+                              random_state=42)
 
-  white = pd.read_csv(filename, low_memory=False, sep=';').values
-
-  [N, d] = white.shape
-
-  if(mapping == True):
-    maped_X = mapping_data(white[:,:-1],mapping_power)
-    white = np.insert(maped_X, maped_X.shape[1], white[:,-1], axis=1)
-    
+  X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], train_size=0.7, random_state=42)
+  return X_train, X_test, y_train, y_test
 
 
+def moon_dataset():
+  data = make_moons(n_samples=500, shuffle=True, noise=0.2, random_state=42)
+  X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], train_size=0.7, random_state=42)
+  return X_train, X_test, y_train, y_test
 
-  np.random.seed(3)
-  # prepare data
-  ridx = np.random.permutation(N)
-  ntr = int(np.round(N * 0.8))
-  nval = int(np.round(N * 0.1))
-  ntest = N - ntr - nval
 
-  # spliting training, validation, and test
+# Multiple classification data
 
-  Xtrain = np.hstack([np.ones([ntr, 1]), white[ridx[0:ntr], 0:-1]])
+def smile_dataset_clear():
+  data = make_blobs(n_samples=870,
+            n_features=2,
+            random_state=42, 
+            centers=[[-5, 5], [5, 5], [-4, -2], [-2, -4], [0, -5], [2, -4], [4, -2] ],
+            cluster_std=1)
+  data[1][data[1] > 2] = 2
+  X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], train_size=0.7, random_state=42)
+  return X_train, X_test, y_train, y_test
 
-  ytrain = white[ridx[0:ntr], -1]
+def smile_dataset_blur():
+  data = make_blobs(n_samples=50000,
+            n_features=2,
+            random_state=42, 
+            centers=[[-5, 5], [5, 5], [-4, -2], [-2, -4], [0, -5], [2, -4], [4, -2] ],
+            cluster_std=2)
+  data[1][data[1] > 2] = 2
+  X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], train_size=0.7, random_state=42)
+  return X_train, X_test, y_train, y_test
 
-  Xval = np.hstack([np.ones([nval, 1]), white[ridx[ntr:ntr + nval], 0:-1]])
-  yval = white[ridx[ntr:ntr + nval], -1]
 
-  Xtest = np.hstack([np.ones([ntest, 1]), white[ridx[ntr + nval:], 0:-1]])
-  ytest = white[ridx[ntr + nval:], -1]
-  if(non_invertible == True):
-    N, D = Xtrain.shape
-    np.random.seed(4)
-    random_row = np.random.randint(N)
-    random_col = np.random.randint(D)
-    
-    Xtrain[:,random_col] = 0
-    Xtrain[random_row,:] = 0
-    
-    return Xtrain, ytrain, Xval, yval, Xtest, ytest
-  return Xtrain, ytrain, Xval, yval, Xtest, ytest
+# Hand-written digits data
+def data_loader_mnist(dataset='mnist_subset.json'):
+  # This function reads the MNIST data and separate it into train, val, and test set
+  with open(dataset, 'r') as f:
+        data_set = json.load(f)
+  train_set, valid_set, test_set = data_set['train'], data_set['valid'], data_set['test']
 
+  return np.asarray(train_set[0]), \
+          np.asarray(test_set[0]), \
+          np.asarray(train_set[1]), \
+          np.asarray(test_set[1])
 
 
 
